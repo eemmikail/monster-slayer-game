@@ -11,6 +11,8 @@ const app = Vue.createApp({
       playerHealth: 100,
       roundNumber: 0,
       isSpecialAttackActive: true,
+      winner: null,
+      logMessages: [],
     };
   },
   computed: {
@@ -38,13 +40,28 @@ const app = Vue.createApp({
       console.log("roundNumber", value, specialAttackCountDown);
     },
     playerHealth(value) {
-
+      if (value <= 0 && this.monsterHealth <= 0) {
+        this.winner = "draw";
+      } else if (value <= 0) {
+        this.winner = "monster";
+      }
     },
     monsterHealth(value) {
-
-    }
+      if (value <= 0 && this.playerHealth <= 0) {
+        this.winner = "draw";
+      } else if (value <= 0) {
+        this.winner = "player";
+      }
+    },
   },
   methods: {
+    startGame() {
+      this.playerHealth = 100;
+      this.monsterHealth = 100;
+      this.winner = null;
+      this.roundNumber = 0;
+      this.logMessages = [];
+    },
     attackMonster() {
       const attackPower = getRandomNumber(5, 12);
       this.monsterHealth -= attackPower;
@@ -54,12 +71,16 @@ const app = Vue.createApp({
       this.attackPlayer();
 
       this.roundNumber++;
+
+      this.addLogMessage("player","attack",attackPower);
     },
     attackPlayer() {
       const attackPower = getRandomNumber(8, 15);
       this.playerHealth -= attackPower;
 
       if (this.playerHealth < 0) this.playerHealth = 0;
+
+      this.addLogMessage("monster","attack",attackPower);
     },
     specialAttackMonster() {
       this.isSpecialAttackActive = false;
@@ -72,6 +93,8 @@ const app = Vue.createApp({
       this.attackPlayer();
 
       this.roundNumber++;
+
+      this.addLogMessage("player","specialAttack",attackPower);
     },
     healPlayer() {
       this.roundNumber++;
@@ -83,7 +106,20 @@ const app = Vue.createApp({
         this.playerHealth += healValue;
       }
       this.attackPlayer();
+
+      this.addLogMessage("player","heal",healValue);
     },
+    surrender() {
+      this.winner = 'monster';
+    },
+    addLogMessage(who,what,value) { 
+      //push end of array, unshift beggining of the array.
+      this.logMessages.unshift({
+        actionBy: who,
+        actionType: what,
+        actionValue: value
+      });
+    }
   },
 });
 
